@@ -1,27 +1,28 @@
 import java.util.concurrent.ForkJoinPool
 import java.util.concurrent.RecursiveTask
 
-class ParallelUtils(private val pool: ForkJoinPool, private val threshold: Int) {
-  fun <T, R> Array<T>.parallelMap(function: (T) -> R): List<R> {
-    if (isEmpty()) return emptyList()
+@Suppress("UNCHECKED_CAST")
+class ParallelUtils(val pool: ForkJoinPool, private val threshold: Int) {
+  inline fun <T, reified R> parallelMap(array: Array<T>, noinline function: (T) -> R): Array<R> {
+    if (array.isEmpty()) return emptyArray<R>()
 
-    val output = arrayOfNulls<R>(size)
-    val task = ParallelMapTask(this, output, function, 0, size)
+    val output = java.lang.reflect.Array.newInstance(R::class.java, array.size) as Array<R>
+    val task = ParallelMapTask(array, output, function, 0, array.size - 1)
 
     pool.invoke(task)
 
-    return output.toList()
+    return output
   }
 
-  fun <T, R> Array<T>.parallelScan(function: (T, T) -> R): Array<R> {
+//  fun <T, R> Array<T>.parallelScan(function: (T, T) -> R): Array<R> {
+//
+//  }
+//
+//  fun <T> Array<T>.parallelFilter(function: (T) -> Boolean): Array<T> {
+//
+//  }
 
-  }
-
-  fun <T> Array<T>.parallelFilter(function: (T) -> Boolean): Array<T> {
-
-  }
-
-  private inner class ParallelMapTask<T, R>(
+  inner class ParallelMapTask<T, R>(
     private val inArray: Array<T>,
     private val outArray: Array<R>,
     private val function: (T) -> R,
@@ -29,14 +30,14 @@ class ParallelUtils(private val pool: ForkJoinPool, private val threshold: Int) 
     private val rightIndex: Int
   ) : RecursiveTask<Unit>() {
     override fun compute() {
-      if (rightIndex - leftIndex <= threshold) {
-        for (i in leftIndex until rightIndex) {
+      if (rightIndex - leftIndex < threshold) {
+        for (i in leftIndex..rightIndex) {
           outArray[i] = function(inArray[i])
         }
       } else {
         val mid = (leftIndex + rightIndex) / 2
         val left = ParallelMapTask(inArray, outArray, function, leftIndex, mid)
-        val right = ParallelMapTask(inArray, outArray, function, mid, rightIndex)
+        val right = ParallelMapTask(inArray, outArray, function, mid + 1, rightIndex)
         invokeAll(left, right)
       }
     }

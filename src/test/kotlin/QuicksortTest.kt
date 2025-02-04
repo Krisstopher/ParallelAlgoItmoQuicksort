@@ -25,7 +25,7 @@ class QuicksortTest {
     val testRuns = 1000
 
     for (i in 1..testRuns) {
-      val size = abs(random.nextLong()) % 1000
+      val size = abs(random.nextLong()) % 10000 + 1000
       val array = random.doubles(size).toArray().toTypedArray()
       val quicksort = ParQuicksort<Double>(5, 10)
 
