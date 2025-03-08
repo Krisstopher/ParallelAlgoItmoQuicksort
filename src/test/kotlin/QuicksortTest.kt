@@ -33,4 +33,18 @@ class QuicksortTest {
       assertThat(resultArray).isSorted
     }
   }
+
+  @Test
+  fun testParWithFilter() {
+    val testRuns = 1000
+
+    for (i in 1..testRuns) {
+      val size = abs(random.nextLong()) % 10000 + 1000
+      val array = random.ints(size).toArray().toTypedArray()
+      val quicksort = ParQuicksortWithFilter(5, 4)
+
+      val resultArray = quicksort.sort(array)
+      assertThat(resultArray).isSorted
+    }
+  }
 }
